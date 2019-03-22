@@ -19,7 +19,8 @@ RUN date \
   && yum-config-manager --enable rhel-7-server-extra-rpms \
   && yum-config-manager --enable rhel-7-server-optional-rpms \
   && yum -y install R \
-  && yum clean all
+  && yum clean all \
+  && rm -rf /var/cache/yum
 
 CMD ["R"]
 
