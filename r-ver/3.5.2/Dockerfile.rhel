@@ -1,0 +1,109 @@
+FROM registry.access.redhat.com/rhel7.6
+
+LABEL org.label-schema.license="GPL-2.0" \
+      maintainer="Dan Clark <danclark@redhat.com>"
+
+ARG R_VERSION
+ARG BUILD_DATE
+ENV BUILD_DATE ${BUILD_DATE:-2019-03-11}
+ENV R_VERSION=${R_VERSION:-3.5.2} \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    TERM=xterm
+
+RUN date \
+##  && yum -y update \
+  && yum -y install \
+     gcc gcc-gfortran gcc-c++ \
+     make unzip \
+     perl xauth tk-devel tcl-devel \
+     libjpeg-devel libX11-devel \
+     libXt-devel libicu-devel libpng-devel \
+     readline-devel bzip2-devel xz-devel \
+     pcre-devel libcurl-devel m4 \
+     java-1.8.0-openjdk \
+     java-1.8.0-openjdk-devel \
+  && cd /tmp \
+  ## Download source code
+  && curl -O https://cran.r-project.org/src/base/R-3/R-${R_VERSION}.tar.gz \
+  ## Extract source code
+  && tar -xf R-${R_VERSION}.tar.gz \
+  && cd R-${R_VERSION} \
+  ## Set compiler flags
+  && R_PAPERSIZE=letter \
+    R_BATCHSAVE="--no-save --no-restore" \
+    R_BROWSER=xdg-open \
+    PAGER=/usr/bin/less \
+    PERL=/usr/bin/perl \
+    R_UNZIPCMD=/usr/bin/unzip \
+    R_ZIPCMD=/usr/bin/zip \
+    R_PRINTCMD=/usr/bin/lpr \
+    LIBnn=lib \
+    AWK=/usr/bin/awk \
+    CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g" \
+    CXXFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g" \
+  ## Configure options
+  ./configure --enable-R-shlib \
+               --enable-memory-profiling \
+               --with-readline \
+               --with-blas \
+               --with-tcltk \
+               --disable-nls \
+               --with-recommended-packages \
+  ## Build and install
+  && make \
+  && make install \
+  ## Symlink for RHEL vs Debian
+  && ln -sf /usr/local/lib64/R /usr/local/lib/R \
+  ## Add a default CRAN mirror
+  && echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+  ## Add a library directory (for user-installed packages)
+  && mkdir -p /usr/local/lib/R/site-library \
+  && chown root:staff /usr/local/lib/R/site-library \
+  && chmod g+wx /usr/local/lib/R/site-library \
+  ## Fix library path
+  && echo "R_LIBS_USER='/usr/local/lib/R/site-library'" >> /usr/local/lib/R/etc/Renviron \
+  && echo "R_LIBS=\${R_LIBS-'/usr/local/lib/R/site-library:/usr/local/lib/R/library:/usr/lib/R/library'}" >> /usr/local/lib/R/etc/Renviron \
+  ## install packages from date-locked MRAN snapshot of CRAN
+  && [ -z "$BUILD_DATE" ] && BUILD_DATE=$(TZ="America/Los_Angeles" date -I) || true \
+  && MRAN=https://mran.microsoft.com/snapshot/${BUILD_DATE} \
+  && echo MRAN=$MRAN >> /etc/environment \
+  && export MRAN=$MRAN \
+  && echo "options(repos = c(CRAN='$MRAN'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+  ## Use littler installation scripts
+  && Rscript -e "install.packages(c('littler', 'docopt'), repo = '$MRAN')" \
+  && ln -s /usr/local/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
+  && ln -s /usr/local/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
+  && ln -s /usr/local/lib/R/site-library/littler/bin/r /usr/local/bin/r \
+  ## Clean up from R source install
+  && cd / \
+  && rm -rf /tmp/* \
+##  && yum -y erase bzip2-devel gcc gcc-c++ gcc-gfortran java-1.8.0-openjdk java-1.8.0-openjdk-devel libX11-devel \
+##  libXt-devel libcurl-devel libicu-devel libjpeg-turbo-devel libpng-devel m4 make pcre-devel perl readline-devel \ 
+##  tcl-devel tk-devel unzip xorg-x11-xauth xz-devel alsa-lib atk avahi-libs cairo copy-jdk-configs cpp cups-libs \ 
+##  dejavu-fonts-common dejavu-sans-fonts expat-devel fontconfig fontconfig-devel fontpackages-filesystem freetype \
+##  freetype-devel fribidi gdk-pixbuf2 gettext gettext-libs giflib glibc-devel glibc-headers graphite2 groff-base \
+##  gtk-update-icon-cache gtk2 harfbuzz hicolor-icon-theme hwdata jasper-libs java-1.8.0-openjdk-headless \
+##  javapackages-tools jbigkit-libs kernel-headers libICE libICE-devel libSM libSM-devel libX11 libX11-common \
+##  libXau libXau-devel libXcomposite libXcursor libXdamage libXext libXfixes libXft libXft-devel libXi libXinerama \
+##  libXmu libXrandr libXrender libXrender-devel libXt libXtst libXxf86vm libcroco libdrm libfontenc libgfortran \
+##  libglvnd libglvnd-egl libglvnd-glx libgomp libicu libjpeg-turbo libmpc libpciaccess libpng libquadmath \
+##  libquadmath-devel libstdc++-devel libthai libtiff libunistring libuuid-devel libwayland-client libwayland-server \
+##  libxcb libxcb-devel libxshmfence libxslt lksctp-tools mesa-libEGL mesa-libGL mesa-libgbm mesa-libglapi mpfr \
+##  ncurses-devel pango pcsc-lite-libs perl-Carp perl-Encode perl-Exporter perl-File-Path perl-File-Temp \
+##  perl-Filter perl-Getopt-Long perl-HTTP-Tiny perl-PathTools perl-Pod-Escapes perl-Pod-Perldoc perl-Pod-Simple \
+##  perl-Pod-Usage perl-Scalar-List-Utils perl-Socket perl-Storable perl-Text-ParseWords perl-Time-HiRes \
+##  perl-Time-Local perl-constant perl-libs perl-macros perl-parent perl-podlators perl-threads \
+##  perl-threads-shared pixman python-javapackages python-lxml tcl tk ttmkfdir tzdata-java \
+##  xorg-x11-font-utils xorg-x11-fonts-Type1 xorg-x11-proto-devel zlib-devel \
+  && yum clean all
+
+CMD ["R"]
+
+
+
+
+
+
+
+
