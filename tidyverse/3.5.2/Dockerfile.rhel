@@ -1,4 +1,4 @@
-FROM localhost/rhel7/rocker/rstudio
+FROM quay.io/danclark/rstudio:3.5.2
 
 RUN yum -y install \
   libxml2-devel \
@@ -12,5 +12,5 @@ RUN yum -y install \
   unixodbc-dev \
   && yum clean all \
   && rm -rf /var/cache/yum \
-  && Rscript --verbose -e 'install.packages(c("tidyverse", "dplyr", "devtools", "formatR", "remotes", "selectr", "caTools", "BiocManager"), repos="http://cran.us.r-project.org")'
+  && Rscript --verbose -e 'install.packages(c("tidyverse", "dplyr", "devtools", "formatR", "remotes", "selectr", "caTools", "BiocManager"), repos="http://cran.r-project.org")'
 
