@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:jessie
 
 LABEL org.label-schema.license="GPL-2.0" \
       org.label-schema.vcs-url="https://github.com/rocker-org/rocker-versioned" \
@@ -7,15 +7,17 @@ LABEL org.label-schema.license="GPL-2.0" \
 
 ARG R_VERSION
 ARG BUILD_DATE
-ENV R_VERSION=${R_VERSION:-3.6.1} \
+ENV BUILD_DATE ${BUILD_DATE:-2015-06-18}
+ENV R_VERSION=${R_VERSION:-3.2.1} \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     TERM=xterm
 
+## dependencies
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     bash-completion \
-    ca-certificates \
+    ca-certificates curl \
     file \
     fonts-texgyre \
     g++ \
@@ -24,13 +26,12 @@ RUN apt-get update \
     libblas-dev \
     libbz2-1.0 \
     libcurl3 \
-    libicu57 \
+    libicu52 \
     libjpeg62-turbo \
     libopenblas-dev \
     libpangocairo-1.0-0 \
     libpcre3 \
-    libpng16-16 \
-    libreadline7 \
+    libpng12-0 \
     libtiff5 \
     liblzma5 \
     locales \
@@ -41,7 +42,7 @@ RUN apt-get update \
   && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
   && locale-gen en_US.utf8 \
   && /usr/sbin/update-locale LANG=en_US.UTF-8 \
-  && BUILDDEPS="curl \
+  && BUILDDEPS="\
     default-jdk \
     libbz2-dev \
     libcairo2-dev \
@@ -57,8 +58,8 @@ RUN apt-get update \
     libx11-dev \
     libxt-dev \
     perl \
-    tcl8.6-dev \
-    tk8.6-dev \
+    tcl8.5-dev \
+    tk8.5-dev \
     texinfo \
     texlive-extra-utils \
     texlive-fonts-recommended \
@@ -101,7 +102,7 @@ RUN apt-get update \
   && make \
   && make install \
   ## Add a default CRAN mirror
-  && echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+  && echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'curl')" >> /usr/local/lib/R/etc/Rprofile.site \
   ## Add a library directory (for user-installed packages)
   && mkdir -p /usr/local/lib/R/site-library \
   && chown root:staff /usr/local/lib/R/site-library \
@@ -114,12 +115,18 @@ RUN apt-get update \
   && MRAN=https://mran.microsoft.com/snapshot/${BUILD_DATE} \
   && echo MRAN=$MRAN >> /etc/environment \
   && export MRAN=$MRAN \
-  && echo "options(repos = c(CRAN='$MRAN'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+  && echo "options(repos = c(CRAN='$MRAN'), download.file.method = 'curl')" >> /usr/local/lib/R/etc/Rprofile.site \
   ## Use littler installation scripts
   && Rscript -e "install.packages(c('littler', 'docopt'), repo = '$MRAN')" \
   && ln -s /usr/local/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
   && ln -s /usr/local/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
   && ln -s /usr/local/lib/R/site-library/littler/bin/r /usr/local/bin/r \
+  ## make test
+  && make install-tests \
+  && cd $(R RHOME) \
+  && cd tests \
+  && ../bin/R CMD make check \
+  && R -e 'tools::testInstalledBasic("both")' \
   ## Clean up from R source install
   && cd / \
   && rm -rf /tmp/* \

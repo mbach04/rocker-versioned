@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.5.3
+FROM rocker/tidyverse:3.6.1
 ENV PATH=$PATH:/opt/TinyTeX/bin/x86_64-linux/
 
 ## Add LaTeX, rticles and bookdown support
@@ -7,6 +7,8 @@ RUN wget "https://travis-bin.yihui.name/texlive-local.deb" \
   && rm texlive-local.deb \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
+    ## for some package installs
+	cmake \
     ## for rJava
     default-jdk \
     ## Nice Google fonts
@@ -47,7 +49,7 @@ RUN wget "https://travis-bin.yihui.name/texlive-local.deb" \
     sh -s - --admin --no-path \
   && mv ~/.TinyTeX /opt/TinyTeX \
   && /opt/TinyTeX/bin/*/tlmgr path add \
-  && tlmgr install metafont mfware inconsolata tex ae parskip listings \
+  && tlmgr install ae inconsolata listings metafont mfware parskip pdfcrop tex \
   && tlmgr path add \
   && Rscript -e "tinytex::r_texmf()" \
   && chown -R root:staff /opt/TinyTeX \
