@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi7/ubi-init:latest
+FROM registry.access.redhat.com/rhel7:latest
 
 LABEL org.label-schema.license="GPL-2.0" \
       maintainer="Dan Clark <danclark@redhat.com>"
@@ -11,8 +11,7 @@ ENV R_VERSION=${R_VERSION:-3.6.0} \
     LANG=en_US.UTF-8 \
     TERM=xterm
 
-RUN date \
-##  && yum -y update \
+RUN yum -y update \
   && yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
   && yum-config-manager --enable rhel-7-server-rpms \
   && yum-config-manager --enable rhel-7-server-extra-rpms \

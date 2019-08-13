@@ -1,12 +1,10 @@
-FROM quay.io/danclark/rstudio:3.5.2
+FROM quay.io/rocker/rstudio:rhel7-3.6.0
 
 RUN yum -y install \
   libxml2-devel \
-## wanted cairo2 but don't see that in RHEL...
   cairo-devel \
   sqlite-devel \
   mariadb-devel \
-##  libmariadb-client-lgpl-dev \
   libpqxx-devel \
   libssh-devel \
   unixodbc-dev \
