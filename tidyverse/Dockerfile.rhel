@@ -1,0 +1,16 @@
+FROM quay.io/danclark/rstudio:3.5.2
+
+RUN yum -y install \
+  libxml2-devel \
+## wanted cairo2 but don't see that in RHEL...
+  cairo-devel \
+  sqlite-devel \
+  mariadb-devel \
+##  libmariadb-client-lgpl-dev \
+  libpqxx-devel \
+  libssh-devel \
+  unixodbc-dev \
+  && yum clean all \
+  && rm -rf /var/cache/yum \
+  && Rscript --verbose -e 'install.packages(c("tidyverse", "dplyr", "devtools", "formatR", "remotes", "selectr", "caTools", "BiocManager"), repos="http://cran.r-project.org")'
+

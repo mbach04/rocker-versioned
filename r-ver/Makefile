@@ -1,12 +1,21 @@
 LATEST=3.5.1
+LATEST_RHEL=3.6.0
+#RHEL_VERSION=7
+RHEL_REG="quay.io/rocker"
 ## Also update this in default Dockerfile on new version release!!
 
 latest:
 	docker build --build-arg R_VERSION=${LATEST} -t rocker/r-ver .
 
+latest-rhel7:
+	sudo podman build --build-arg R_VERSION=${LATEST_RHEL} -t ${RHEL_REG}/r-ver:rhel7-${LATEST_RHEL} -f ./Dockerfile.rhel .
+	sudo podman tag ${RHEL_REG}/r-ver:rhel7-${LATEST_RHEL} ${RHEL_REG}/r-ver:rhel7-latest
+
 ## Auto-generate separate Dockerfiles for auto builds by hub
 sync: devel/Dockerfile ${LATEST}/Dockerfile
 
+3.6.0/Dockerfile.rhel:
+	export R_VERSION=${LATEST} && unset BUILD_DATE && make update
 
 3.5.1/Dockerfile: Dockerfile
 	export R_VERSION=${LATEST} && unset BUILD_DATE && make update
