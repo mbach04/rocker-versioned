@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi7/ubi-init:latest
+FROM registry.access.redhat.com/rhel7:latest
 
 LABEL org.label-schema.license="GPL-2.0" \
       maintainer="Dan Clark <danclark@redhat.com>"
