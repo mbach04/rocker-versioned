@@ -24,11 +24,13 @@ RUN  date \
   && echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'curl')" >> /usr/lib64/R/etc/Rprofile.site \
   ## Add a library directory (for user-installed packages)
   && mkdir -p /usr/lib64/R/library \
-#  && chown root:staff /usr/lib64/R/library \
-#  && chmod g+wx /usr/lib64/R/library \
+  #&& chown root:staff /usr/lib64/R/library \
+  #&& chmod g+wx /usr/lib64/R/library \
   ## Fix library path
-  && echo "R_LIBS_USER='/usr/lib64/R/library'" >> /usr/lib64/R/etc/Renviron \
-  && echo "R_LIBS=\${R_LIBS-'/usr/lib64/R/library:/usr/lib64/R/library:/usr/lib/R/library'}" >> /usr/lib64/R/etc/Renviron \
+  #&& echo "R_LIBS_USER='/usr/lib64/R/library'" >> /usr/lib64/R/etc/Renviron \
+  #&& echo "R_LIBS=\${R_LIBS-'/usr/lib64/R/library:/usr/lib64/R/library:/usr/lib/R/library'}" >> /usr/lib64/R/etc/Renviron \
+  ## Make installation of R packages multithreaded or it takes forever
+  && sed -i "s/'make'/'make -j4'/" /usr/lib64/R/etc/Renviron \
   ## install packages from date-locked MRAN snapshot of CRAN
   && [ -z "$BUILD_DATE" ] && BUILD_DATE=$(TZ="America/New_York" date -I) || true \
   && MRAN=https://mran.microsoft.com/snapshot/${BUILD_DATE} \
