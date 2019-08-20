@@ -1,0 +1,72 @@
+FROM quay.io/rocker/tidyverse:rhel7-3.5.2
+ENV PATH=$PATH:/opt/TinyTeX/bin/x86_64-linux/
+
+## Add LaTeX, rticles and bookdown support
+RUN wget "https://travis-bin.yihui.name/texlive-local.deb" \
+  && dpkg -i texlive-local.deb \
+  && rm texlive-local.deb \
+  && yum -y install \
+    ## for some package installs
+    cmake \
+    ## for rJava
+    java-1.8.0-openjdk-devel \
+    java-1.8.0-openjdk-headless \
+    java-1.8.0-openjdk \
+    ## Nice Google fonts
+    roboto-fontface-fonts \
+    ## used by some base R plots
+    ghostscript \
+    ## used to build rJava and other packages
+    bzip2-devel \
+    libicu-devel \
+    #liblzma
+    xz-devel \
+    ## system dependency of hunspell (devtools)
+    hunspell \
+    #libhunspell-dev \
+    ## system dependency of hadley/pkgdown
+    ImageMagick-devel \
+    ## rdf, for redland / linked data
+    redland-devel \
+    #librdf0-dev \
+    ## for V8-based javascript wrappers
+    v8-devel \
+    ## R CMD Check wants qpdf to check pdf sizes, or throws a Warning
+    qpdf \
+    ## For building PDF manuals
+    texinfo \
+    ## for git via ssh key
+    ssh \
+    ## just because
+    less \
+    vim \
+    ## parallelization
+    czmq-devel \
+    cppzmq-devel \
+    openmpi-devel \
+  && yum clean all \
+  && rm -rf /var/cache/yum \
+  ## Use tinytex for LaTeX installation
+  && Rscript --verbose -e 'install.packages(c("tinytex"))' \
+  ## Admin-based install of TinyTeX:
+  && wget -qO- \
+    "https://github.com/yihui/tinytex/raw/master/tools/install-unx.sh" | \
+    sh -s - --admin --no-path \
+  && mv ~/.TinyTeX /opt/TinyTeX \
+  && /opt/TinyTeX/bin/*/tlmgr path add \
+  && tlmgr install ae inconsolata listings metafont mfware parskip pdfcrop tex \
+  && tlmgr path add \
+  && Rscript -e "tinytex::r_texmf()" \
+  && chown -R root:staff /opt/TinyTeX \
+  && chown -R root:staff /usr/local/lib/R/site-library \
+  && chmod -R g+w /opt/TinyTeX \
+  && chmod -R g+wx /opt/TinyTeX/bin \
+  && echo "PATH=${PATH}" >> /usr/local/lib/R/etc/Renviron \
+  && install2.r --error PKI \
+  ## And some nice R packages for publishing-related stuff
+  && install2.r --error --deps TRUE \
+    bookdown rticles rmdshower rJava
+#
+## Consider including:
+# - yihui/printr R package (when released to CRAN)
+# - libgsl0-dev (GSL math library dependencies)
