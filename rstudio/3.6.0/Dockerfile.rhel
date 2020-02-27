@@ -1,4 +1,4 @@
-FROM quay.io/rocker/r-ver:rhel7-3.6.0
+FROM quay.agilesof.com/mbach/r-ver:rhel7-3.6.0
 
 ARG RSTUDIO_VERSION
 ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-1.1.463}
