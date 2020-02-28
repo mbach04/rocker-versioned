@@ -13,7 +13,7 @@ metadata:
       Deploys R Studio to OpenShift
     iconClass: icon-other-linux
     openshift.io/display-name: R Studio
-    openshift.io/documentation-url: https://github.com/mbach04/rocker-versioned
+    openshift.io/documentation-url: https://github.com/mbach04/openshift-r
     openshift.io/support-url: 
     openshift.io/long-description: TBA
     openshift.io/provider-display-name: None
@@ -168,7 +168,7 @@ parameters:
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: https://github.com/mbach04/shiny-openshift.git
+  value: https://github.com/mbach04/openshift-r.git
 
 - description: Set this to a branch name, tag or other ref of your repository if you are not using the default branch
   displayName: Git Reference
