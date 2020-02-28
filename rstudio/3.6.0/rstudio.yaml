@@ -124,7 +124,7 @@ objects:
             persistentVolumeClaim:
               claimName: ${NAME}-pvc
         containers:
-          - name: shinyserver
+          - name: rstudio
             image: ${NAME}:latest
             ports:
               - containerPort: 3838
@@ -156,7 +156,7 @@ parameters:
   displayName: Application Name
   name: NAME
   required: true
-  value: shinyserver
+  value: rstudio
 
 - description: Maximum amount of memory the container can use
   displayName: Memory Limit
